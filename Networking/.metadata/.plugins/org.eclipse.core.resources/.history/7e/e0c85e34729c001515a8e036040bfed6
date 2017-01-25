@@ -1,0 +1,18 @@
+package networking;
+
+import networking.ClientTCP;
+import networking.ServerTCP;
+import java.io.*;
+
+public class NetCore {
+	
+	public static void main(String[] args) throws IOException {
+		
+		ServerTCP x = new ServerTCP(4101);
+		ClientTCP y = new ClientTCP("localhost", 4101);
+		x.start();
+		y.start();
+		
+	}
+
+}

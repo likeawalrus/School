@@ -1,0 +1,99 @@
+%Cole Hannel
+%Animal enclosure Simulation
+%So for this one we're going to need a lot of stuff
+%most comments are at the point of use
+
+cageExample : THEORY
+  BEGIN
+    hn: TYPE = nat                %number of humans
+    ln: TYPE =  nat                %number of lions
+    ID: TYPE
+    DOOR: TYPE        %A door is a door
+    ROOM: TYPE = [ hn, ln, setof[DOOR] ]        %the room, a tuple that contains two numbers, human and lion as well as a list of doors
+    ROOMS: TYPE = [ID-> ROOM] % The room list is a list of IDs that give a room. This seems better than the way i was previously trying to do it
+
+
+    NotRoom: ID% ROOM = (0, 0, emptyset[DOOR])              %Blank Room
+    theWorld: ID             %theWorld is the default room
+    anId, anotherId: VAR ID
+    room1, room2: VAR ROOM
+    aDoor: VAR DOOR
+    aRoom: VAR ROOM
+    allRooms: VAR ROOMS
+
+    %Has this room if the room is not notRoom
+    HasRoom(anId, allRooms): bool = anId /= NotRoom
+
+    %A room list is valid if exactly two rooms have door x that are not the same room
+    validRoomList(allRooms): bool =
+        FORALL (x:DOOR), (rm1,rm2,rm3: ID):member(x, proj_3(allRooms(rm1))) & member(x, proj_3(allRooms(rm2))) => rm1 /= rm2 & rm2 /= rm3 & rm1 /= rm3 & NOT member(x, proj_3(allRooms(rm3)))
+
+    %a room list is valid if every room has a door(no inaccessible voids)
+    %Specifically, a room being a member of allrooms implies that it has a door
+    validRoomList2(allRooms): bool = FORALL (rm1:ID): proj_3(allRooms(rm1)) /= emptyset[DOOR]
+
+    %This function checks if the system is safe(meaning there are no lions and no humans in the same room)
+    safeSystem(allRooms): bool = FORALL (rm1:ID): proj_1(allRooms(rm1)) > 0 => proj_2(allRooms(rm1)) = 0
+
+    %Expanding function to check for complete validity
+    %It's valid if the validity conditions are true, as well as if the system starts off safe. The system needs to start off safe so
+    %that there isn't an automatic failure
+    completeValid(allRooms): bool = validRoomList(allRooms) & validRoomList2(allRooms) & safeSystem(allRooms)
+
+    %Discovered that allRooms actually needs to be validated outside of functions, so came up with a new type that starts off valid
+    GOODROOMS: TYPE = {rms: ROOMS | completeValid(rms) = True}
+    allGoodRooms: VAR GOODROOMS
+
+    %Old function being saved for reference
+    %This function takes in a door and the room list returns whether or not passing between the two rooms contained within is safe or not
+    %Safe is defined as if there is not a lion on either side of the door
+    %SafeDoor(aDoor, allRooms): bool = (FORALL(rm1:ID): member(aDoor, proj_3(allRooms(rm1))) => proj_2(allRooms(rm1)) = 0)
+
+    lionAtDoor(aDoor, allGoodRooms): bool = FORALL(rm1:ID): member(aDoor, proj_3(allGoodRooms(rm1))) => proj_2(allGoodRooms(rm1)) = 0
+
+    humanAtDoor(aDoor, allGoodRooms): bool = FORALL(rm1:ID): member(aDoor, proj_3(allGoodRooms(rm1))) => proj_1(allGoodRooms(rm1)) = 0
+
+    %new safeDoor. Under new safeDoor, a door is not safe if a human and a lion are on both sides of the door 
+    safeDoor(aDoor, allGoodRooms): bool = lionAtDoor(aDoor, allGoodRooms) XOR humanAtDoor(aDoor, allGoodRooms) or not (lionAtDoor(aDoor, allGoodRooms) or humanAtDoor(aDoor, allGoodRooms))
+
+    %This function checks if two rooms share a door. If they do, then movement is valid.
+    sharesDoor(anId, anotherId, allGoodRooms): bool = EXISTS(x:DOOR): member(x, proj_3(allGoodRooms(anId))) => member(x, proj_3(allGoodRooms(anotherId)))
+
+    %an ammended version of the previous function to include safety
+    sharesDoor2(anId, anotherId, allGoodRooms): bool = EXISTS(x:DOOR): member(x, proj_3(allGoodRooms(anId))) & member(x, proj_3(allGoodRooms(anotherId))) & safeDoor(x, allGoodRooms)
+
+    %Helper functions for my sanity
+    addHumans(aRoom): ROOM = (proj_1(aRoom)+1, proj_2(aRoom), proj_3(aRoom))
+    removeHumans(aRoom): ROOM = (proj_1(aRoom)-1, proj_2(aRoom), proj_3(aRoom))
+    addLions(aRoom): ROOM = (proj_1(aRoom), proj_2(aRoom)+1, proj_3(aRoom))
+    removeLions(aRoom): ROOM = (proj_1(aRoom), proj_2(aRoom)-1, proj_3(aRoom))
+
+    %This function takes a human and moves it between two rooms
+    moveHuman(anId, anotherId, allGoodRooms): ROOMS  =IF sharesDoor2(anId, anotherId, allGoodRooms)
+    		    & proj_1(allGoodRooms(anotherId)) > 0 & anId /= anotherId
+		    THEN allGoodRooms WITH [(anId) := addHumans(allGoodRooms(anId)), (anotherId) := removeHumans(allGoodRooms(anotherId)) ]			ELSE allGoodRooms ENDIF
+
+    %As a parallel to the last function, this takes a lion and moves it between two rooms
+    moveLion(anId, anotherId, allGoodRooms): ROOMS = IF sharesDoor2(anId, anotherId, allGoodRooms)
+    		   & proj_1(allGoodRooms(anotherId)) > 0 & anId /= anotherId
+		   THEN allGoodRooms WITH [(anId):= addLions(allGoodRooms(anId)),(anotherId):=removeLions(allGoodRooms(anotherId))] ELSE allGoodRooms ENDIF
+
+
+
+
+%Down here are all of the actual proofs
+%This is practice for me to get the hang of proving things
+testHumans: CONJECTURE FORALL (rm:ROOM):
+    addHumans(removeHumans(rm)) = rm
+
+testHumans2: CONJECTURE FORALL(rm:ROOM):
+    removeHumans(addHumans(rm)) = rm
+
+%This one is a proof that the moveHuman function will not cause a lion and a human to be in the same room
+testHumanMovement: CONJECTURE FORALL (id1, id2:ID):
+    safeSystem(moveHuman(id1, id2, allGoodRooms))
+
+testLionMovement: CONJECTURE FORALL (id1, id2:ID):
+    safeSystem(moveLion(id1, id2, allGoodRooms))
+
+END cageExample

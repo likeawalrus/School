@@ -1,0 +1,59 @@
+package networking;
+
+
+
+import java.io.*;
+import java.net.*;
+
+public class ClientTCP extends Thread{
+	private Thread t;
+	private String threadName = "clientthread";
+	
+	
+	public ClientTCP (String name, int pnumb){
+			//exist
+		}
+	
+    public void run() {
+    	int pnumb = 4202;
+        String as = "a";
+        String hostName = "127.0.0.1";
+        int portNumber = pnumb;
+	    System.out.println("client");
+        try (
+            Socket tcpSocket = new Socket(hostName, portNumber);
+            PrintWriter out = new PrintWriter(tcpSocket.getOutputStream(), true);
+            PrintWriter inptime = new PrintWriter("inptime.txt", "UTF-8");                   
+	
+        ) {
+        	inptime.println(System.currentTimeMillis());        	
+	        for(int i = 0; i < 20; i++){
+	        	for(int j = 0; j < 100; j++){
+	        		out.println(as);
+	        	}
+	        	as += as;
+	            inptime.println(as);	        	
+	            inptime.println(System.currentTimeMillis());
+	        }
+            
+            
+        } catch (UnknownHostException e) {
+            System.err.println("Don't know about host " + hostName);
+            System.exit(1);
+        } catch (IOException e) {
+            System.err.println("Couldn't get I/O for the connection to " +
+                hostName);
+            System.exit(1);
+        } 
+    }
+   
+	public void start(){
+	      if (t == null)
+	      {
+	         t = new Thread (this, threadName);
+	         t.start ();
+	      }		
+		
+	}
+    
+}	

@@ -1,0 +1,7 @@
+#include <objectloader.h>
+
+using namespace std;
+
+int objectloader::filereader(char *fname){
+
+}

@@ -1,0 +1,41 @@
+package networking;
+
+import java.net.*;
+import java.io.*;
+
+public class ServerTCP extends Thread {
+
+	public ServerTCP(int numb){
+		//exist
+	}
+	
+	public void run(int pnumb) {	
+	    int portNumber = pnumb;
+	    System.out.println("server");
+        try (
+                ServerSocket serverSocket = new ServerSocket(pnumb);
+                Socket clientSocket = serverSocket.accept();     
+                PrintWriter out = new PrintWriter("results.txt", "UTF-8");                   
+                BufferedReader in = new BufferedReader(
+                		new InputStreamReader(clientSocket.getInputStream()));
+        		
+            ) {
+                String inputLine, oldInput = "a";
+                out.println(System.currentTimeMillis());
+	                while ((inputLine = in.readLine()) != null) {
+	                    //out.println(inputLine);
+	                    if(oldInput != inputLine){
+	    	                out.println(System.currentTimeMillis());
+	    	                oldInput = inputLine;
+	                    }
+                }
+                
+                
+            } catch (IOException e) {
+                System.out.println("Exception caught when trying to listen on port "
+                    + portNumber + " or listening for a connection");
+                System.out.println(e.getMessage());
+            }
+        
+	}
+}

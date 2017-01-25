@@ -1,0 +1,14 @@
+package main;
+
+public class actualThread {
+
+	static int L, M, N, threadCount;
+	private Thread myThread;
+	/**
+	 * @param args
+	 */
+	actualThread(){
+		
+	}
+
+}

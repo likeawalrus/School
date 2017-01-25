@@ -1,0 +1,81 @@
+package main;
+import java.util.Vector;
+
+public class threading extends Thread{
+	static int thread_count;       //for command line arg
+	static actualThread[] myThreads;
+	static double[][] matrixA;
+	static double[][] matrixB;
+	static double [][] matrixC;
+	static int L, M, N;
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		  //clock_t t;
+		  //t = clock();
+		  long thread_id; //long for type conversion [long<-->void*] for 64 bit system
+		  //pthread_mutex_init(&mymutex, NULL);
+		  L = Integer.parseInt(args[1]);//Expected input is L, M, N, threads
+		  M = Integer.parseInt(args[2]);
+		  N = Integer.parseInt(args[3]);
+		  System.out.println(L+","+M+","+N);
+		  thread_count = Integer.parseInt(args[4]); //Number of threads
+		  System.out.println(thread_count+" thread");
+		//main is the one responsible for filling in the matrixes
+		  //pthread_t myThreads[thread_count]; //define threads 
+		  matrixA = new double[L][M];
+		  for(int i = 0; i < L; i++){ //Main initiates the values for matrix A
+			      for(int j = 0; j < M; j++){
+			        matrixA[i][j] = i+j;
+			      }
+		  }
+		  matrixB = new double[M][N];
+		  for(int i = 0; i < M; i++){ //Main initiates the values for matrix B
+		      for(int j = 0; j < N; j++){
+		        matrixB[i][j] = i+j+1;
+		      }
+		  }
+		  matrixC = new double[L][N];
+		  for(int i = 0; i < L; i++){ //Initiate C to but set everything to 0
+		      for(int j = 0; j < N; j++){
+		        matrixC[i][j] = 0.0;
+		      }
+		  }
+		  //creates a certain number of threads
+		  long start = System.currentTimeMillis();
+		  myThreads = new actualThread[thread_count];
+		  for(thread_id = 0; thread_id < thread_count; thread_id++){  
+			  	myThreads[(int)thread_id] = new actualThread(thread_id);
+			  	myThreads[(int)thread_id].start();
+		  }
+		  //pthread_mutex_lock(&mymutex);
+		  //cout<<"Hello from the main thread"<<endl;
+		  //pthread_mutex_unlock(&mymutex);
+		  //wait until all threads finish
+		  for(thread_id = 0; thread_id < thread_count; thread_id++) 
+		     myThreads[(int)thread_id].join(); 
+		  long finish = System.currentTimeMillis();
+		  //Now to view the output
+		  for(int i = 0; i<L && i<20;i++){
+		    for(int j = 0; j<N && j<10;j++){
+		        System.out.print(matrixC[i][j]+" ");
+		      }
+		    System.out.println();
+		  }
+		  //Last part printed out
+		  System.out.println("End of the matrix");
+		  if(L>20&& N>10){
+		    for(int i = Math.max(0, L-20); i<L;i++){
+		      for(int j = Math.max(0,(N-10)); j<N;j++){
+		        System.out.print(matrixC[i][j]+" ");
+		      }
+		      System.out.println();
+		    }
+		  }
+		  finish = finish - start;
+		  System.out.println("Total time taken is "+finish);
+		}//main
+
+}

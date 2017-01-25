@@ -1,0 +1,19 @@
+package networking;
+
+import networking.ClientUDP;
+import networking.ServerUDP;
+import java.io.*;
+
+public class NetC {
+	
+	public static void main(String[] args) throws IOException {
+
+		
+		ClientUDP y = new ClientUDP("127.0.0.1", 4103);
+		ServerUDP x = new ServerUDP(4103);		
+		x.start();
+		y.start();
+		
+	}
+
+}

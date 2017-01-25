@@ -1,0 +1,54 @@
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+
+
+public class BounceInBetween {
+
+	public static void main(String args[]){
+		//int portNumber = Integer.parseInt(args[0]);
+		int portNumber = 4125;
+	    System.out.println("server");
+	    boolean unfinished = true;
+        try (
+                DatagramSocket dataSocket = new DatagramSocket(portNumber);
+                PrintWriter out = new PrintWriter("results.txt", "UTF-8");                         		
+            ) {
+        		DatagramPacket packet;
+        		byte[] buff = new byte[32768];
+                int x = 1, count = 0;
+                out.println(System.currentTimeMillis());                
+                out.println(1);
+        		while(unfinished){
+        			packet = new DatagramPacket(buff, 32768);
+            		dataSocket.receive(packet);
+            		count++;
+            		if(x != packet.getLength()){
+            			out.println(count);
+    	                out.println(System.currentTimeMillis());
+            			out.println(packet.getLength());
+    	                count = 0;
+            			x = packet.getLength();
+            			if(packet.getLength() == 3){
+            				unfinished = false;
+            			}
+            		}            		
+        		}
+                dataSocket.close();
+                out.close();
+            } catch (IOException e) {
+                System.out.println("Exception caught when trying to listen on port "
+                    + portNumber + " or listening for a connection");
+                System.out.println(e.getMessage());
+            }
+        
+		
+		
+	}
+	
+	
+	
+	
+	
+}
